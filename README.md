@@ -97,15 +97,17 @@ Planned improvements and extensions:
 - Cache experiments
 - FPGA implementation
 
----
-
-## Why RISC-V?
-
-RISC-V is an open instruction set architecture defined by **RISC-V International** and widely used in both academia and industry.  
-Its clean and modular design makes it ideal for learning processor architecture and hardware design.
 
 ---
 
-## License
+## Tools Required
 
-This project is intended for educational purposes and experimentation with CPU microarchitecture design.
+`make` - To execute the makefile <br>
+
+To compile tests: <br>
+`riscv64-linux-gnu-gcc` - To provide assembly and objcopy commands <br>
+
+To simulate: <br>
+`iverilog` - To build and run simulations <br>
+
+---
