@@ -15,18 +15,33 @@ module dataPath(
     wire [31:0] memRead;
     wire [31:0] instr;
     wire [31:0] reg1, reg2; // Register File Outputs
-    wire [31:0] r1, r2; // A,B Outputs
+    wire [31:0] ALUSrcAMuxIn [1:0];
+    wire [31:0] ALUSrcBMuxIn [1:0];
+    wire [31:0] ALUA, ALUB;
+    wire [31:0] ALURes;
+    wire [31:0] resMuxIn [1:0];
+    wire [31:0] result;
+    wire zero, overflow;
 
 
     //Architectural State Elements
-    programCounter PC(.clk(clk), .reset(reset), .pcUpdate(pcUpdate), .nextPC(), .currPC(currPC));
-    registerFile regFile(.clk(clk), .regWrite(regWrite), .A1(instr[19:15]), .A2(instr[24:20]), .A3(instr[11:7]), .WD(), .R1(reg1), .R2(reg2));
+    programCounter PC(.clk(clk), .reset(reset), .pcUpdate(pcUpdate), .nextPC(result), .currPC(currPC));
+    registerFile regFile(.clk(clk), .regWrite(regWrite), .A1(instr[19:15]), .A2(instr[24:20]), .A3(instr[11:7]), .WD(result), .R1(reg1), .R2(reg2));
     memory mem(.clk(clk), .memWrite(memWrite), .A1(currPC), .WD(), .RD(memRead));
     
     //Non Architectural State Elements
     enReg32 IRReg(.clk(clk), .reset(reset), .enable(IRWrite), .in(memRead), .out(instr));
-    reg32 A(.clk(clk), .reset(reset), .in(reg1), .out(r1));
-    reg32 B(.clk(clk), .reset(reset), .in(reg2), .out(r2));
+    reg32 A(.clk(clk), .reset(reset), .in(reg1), .out(ALUSrcAMuxIn[1]));
+    reg32 B(.clk(clk), .reset(reset), .in(reg2), .out(ALUSrcBMuxIn[0]));
+    reg32 aluOut(.clk(clk), .reset(reset), .in(ALURes), .out(resMuxIn[0]));
 
     //Combinational Elements
+    assign ALUSrcAMuxIn[0] = currPC;
+    assign ALUSrcBMuxIn[1] = 32'd4;
+    nMux #(.N(2)) ALUSrcAMux(.in(ALUSrcAMuxIn), .sel(ALUSrcA), .out(ALUA));
+    nMux #(.N(2)) ALUSrcBMux(.in(ALUSrcBMuxIn), .sel(ALUSrcB), .out(ALUB));
+    assign resMuxIn[1] = ALURes;
+    nMux #(.N(2)) resMux(.in(resMuxIn), .sel(resSrc), .out(result))
+
+    ALU alu(.A(ALUA), .B(ALUB), .invertOp(instr[30]), .ALUCtrl(ALUCtrl), .ALURes(ALURes), .zero(zero), .overflow(overflow));
 endmodule
