@@ -8,9 +8,11 @@ module ALU(
     output overflow
 );
     wire [31:0] BEff;
+    wire [31:0] resSub;
     assign BEff = (invertOp)? (~B + 1) : B;
-    assign overflow = (A[31] != B[31]) && ((A-B)[31] != A[31]);
-    assign zero = ((A-B) == 0);
+    assign resSub = A-B;
+    assign overflow = (A[31] != B[31]) && (resSub[31] != A[31]);
+    assign zero = (resSub == 0);
     always @(*) begin
       case(ALUCtrl)
         3'b000: ALURes = A+BEff; //ADD/Sub

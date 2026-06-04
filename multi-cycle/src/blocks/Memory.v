@@ -15,4 +15,8 @@ module memory(
             mem[A1[12:2]] <= WD;
     end
 
+    initial begin
+        $readmemh("sim/program.hex", mem);
+    end
+
 endmodule

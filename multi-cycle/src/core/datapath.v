@@ -7,6 +7,7 @@ module dataPath(
     input regWrite,
     input ALUSrcA,
     input ALUSrcB,
+    input invertOp,
     input [2:0] ALUCtrl,
     input resSrc,
     output [31:0] instOut
@@ -41,9 +42,9 @@ module dataPath(
     nMux #(.N(2)) ALUSrcAMux(.in(ALUSrcAMuxIn), .sel(ALUSrcA), .out(ALUA));
     nMux #(.N(2)) ALUSrcBMux(.in(ALUSrcBMuxIn), .sel(ALUSrcB), .out(ALUB));
     assign resMuxIn[1] = ALURes;
-    nMux #(.N(2)) resMux(.in(resMuxIn), .sel(resSrc), .out(result))
+    nMux #(.N(2)) resMux(.in(resMuxIn), .sel(resSrc), .out(result));
 
-    ALU alu(.A(ALUA), .B(ALUB), .invertOp(instr[30]), .ALUCtrl(ALUCtrl), .ALURes(ALURes), .zero(zero), .overflow(overflow));
+    ALU alu(.A(ALUA), .B(ALUB), .invertOp(invertOp), .ALUCtrl(ALUCtrl), .ALURes(ALURes), .zero(zero), .overflow(overflow));
 
     assign instOut = instr;
 endmodule

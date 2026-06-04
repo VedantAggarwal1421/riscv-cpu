@@ -8,6 +8,7 @@ module controlUnit(
     output logic regWrite,
     output logic ALUSrcA,
     output logic ALUSrcB,
+    output logic invertOp,
     output logic [2:0] ALUCtrl,
     output logic resSrc
 );
@@ -15,10 +16,12 @@ module controlUnit(
     wire [6:0] funct7;
     wire [2:0] funct3; 
     wire [6:0] opcode;
+    wire invertOp_t;
 
     assign funct7 = instr[31:25];
     assign funct3 = instr[14:12];
     assign opcode = instr[6:0];
+    assign invertOp_t = funct7[5];
 
     
     localparam memFetch = 3'd0;
@@ -58,6 +61,7 @@ module controlUnit(
         regWrite = 0;
         ALUSrcA = 0;
         ALUSrcB = 0;
+        invertOp = 0;
         resSrc = 0;
         case(currentState)
             memFetch: begin
@@ -75,6 +79,7 @@ module controlUnit(
             execute_R: begin
                 ALUSrcA = 1;
                 ALUSrcB = 0;
+                invertOp = invertOp_t;
             end
             writeBack_ALU: begin
                 resSrc = 0;

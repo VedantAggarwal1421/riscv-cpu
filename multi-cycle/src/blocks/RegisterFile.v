@@ -14,7 +14,15 @@ module registerFile(
     assign R2 = (A2 == 0)? 32'b0:rFile[A2];
 
     always @(posedge clk) begin
-        if(regWrite && (A3 != 0))
-            rFile[A3] <= WD; 
+        if(regWrite && (A3 != 0)) begin
+            rFile[A3] <= WD;
+            $display("Write: x%0d = %0d (0x%h) time=%0t", A3, WD, WD, $time);
+        end
+    end
+
+    initial begin
+        rFile[0] = 32'd0;
+        rFile[1] = 32'd10;
+        rFile[2] = 32'd3;
     end
 endmodule
