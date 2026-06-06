@@ -20,7 +20,12 @@ module ALU(
         3'b010: ALURes = {31'b0, $signed(A) < $signed(B)}; //SLT
         3'b011: ALURes = A < B; //SLTU
         3'b100: ALURes = A ^ B; //XOR
-        3'b101: ALURes = (!invertOp)? (A >> B[4:0]) : ($signed(A) >> B[4:0]); //SRL/SRA
+        3'b101: begin
+          if(invertOp)
+            ALURes = $signed(A) >>> B[4:0]; //SRA
+          else
+            ALURes = A >> B[4:0]; //SRL
+        end
         3'b110: ALURes = A | B;
         3'b111: ALURes = A & B;
       endcase

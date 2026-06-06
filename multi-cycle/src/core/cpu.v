@@ -7,8 +7,9 @@ module CPU(
     wire memWrite;
     wire IRWrite;
     wire regWrite;
+    wire [2:0] immSrc;
     wire ALUSrcA;
-    wire ALUSrcB;
+    wire [1:0] ALUSrcB;
     wire invertOp;
     wire [2:0] ALUCtrl;
     wire resSrc;
@@ -21,6 +22,7 @@ module CPU(
         .memWrite(memWrite),
         .IRWrite(IRWrite),
         .regWrite(regWrite),
+        .immSrc(immSrc),
         .ALUSrcA(ALUSrcA),
         .ALUSrcB(ALUSrcB),
         .invertOp(invertOp),
@@ -37,6 +39,7 @@ module CPU(
         .memWrite(memWrite),
         .IRWrite(IRWrite),
         .regWrite(regWrite),
+        .immSrc(immSrc),
         .ALUSrcA(ALUSrcA),
         .ALUSrcB(ALUSrcB),
         .invertOp(invertOp),

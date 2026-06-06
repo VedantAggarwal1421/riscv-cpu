@@ -5,8 +5,9 @@ module dataPath(
     input memWrite,
     input IRWrite,
     input regWrite,
+    input [2:0] immSrc,
     input ALUSrcA,
-    input ALUSrcB,
+    input [1:0] ALUSrcB,
     input invertOp,
     input [2:0] ALUCtrl,
     input resSrc,
@@ -17,7 +18,7 @@ module dataPath(
     wire [31:0] instr;
     wire [31:0] reg1, reg2; // Register File Outputs
     wire [31:0] ALUSrcAMuxIn [1:0];
-    wire [31:0] ALUSrcBMuxIn [1:0];
+    wire [31:0] ALUSrcBMuxIn [3:0];
     wire [31:0] ALUA, ALUB;
     wire [31:0] ALURes;
     wire [31:0] resMuxIn [1:0];
@@ -27,7 +28,7 @@ module dataPath(
 
     //Architectural State Elements
     programCounter PC(.clk(clk), .reset(reset), .pcUpdate(pcUpdate), .nextPC(result), .currPC(currPC));
-    registerFile regFile(.clk(clk), .regWrite(regWrite), .A1(instr[19:15]), .A2(instr[24:20]), .A3(instr[11:7]), .WD(result), .R1(reg1), .R2(reg2));
+    registerFile regFile(.clk(clk), .reset(reset), .regWrite(regWrite), .A1(instr[19:15]), .A2(instr[24:20]), .A3(instr[11:7]), .WD(result), .R1(reg1), .R2(reg2));
     memory mem(.clk(clk), .memWrite(memWrite), .A1(currPC), .WD(), .RD(memRead));
     
     //Non Architectural State Elements
@@ -39,12 +40,14 @@ module dataPath(
     //Combinational Elements
     assign ALUSrcAMuxIn[0] = currPC;
     assign ALUSrcBMuxIn[1] = 32'd4;
+    assign ALUSrcBMuxIn[3] = 32'd0;
     nMux #(.N(2)) ALUSrcAMux(.in(ALUSrcAMuxIn), .sel(ALUSrcA), .out(ALUA));
-    nMux #(.N(2)) ALUSrcBMux(.in(ALUSrcBMuxIn), .sel(ALUSrcB), .out(ALUB));
+    nMux #(.N(4)) ALUSrcBMux(.in(ALUSrcBMuxIn), .sel(ALUSrcB), .out(ALUB));
     assign resMuxIn[1] = ALURes;
     nMux #(.N(2)) resMux(.in(resMuxIn), .sel(resSrc), .out(result));
 
     ALU alu(.A(ALUA), .B(ALUB), .invertOp(invertOp), .ALUCtrl(ALUCtrl), .ALURes(ALURes), .zero(zero), .overflow(overflow));
+    immediateGenerator immGen(.instr(instr[31:7]), .immSrc(immSrc), .extendedImm(ALUSrcBMuxIn[2]));
 
     assign instOut = instr;
 endmodule
