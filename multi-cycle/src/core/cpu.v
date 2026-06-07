@@ -4,6 +4,7 @@ module CPU(
 );
     //Control Wires
     wire pcUpdate;
+    wire adrSrc;
     wire memWrite;
     wire IRWrite;
     wire regWrite;
@@ -12,13 +13,14 @@ module CPU(
     wire [1:0] ALUSrcB;
     wire invertOp;
     wire [2:0] ALUCtrl;
-    wire resSrc;
+    wire [1:0] resSrc;
     wire [31:0] instr;
 
     dataPath DP(
         .clk(clk),
         .reset(reset),
         .pcUpdate(pcUpdate),
+        .adrSrc(adrSrc),
         .memWrite(memWrite),
         .IRWrite(IRWrite),
         .regWrite(regWrite),
@@ -36,6 +38,7 @@ module CPU(
         .reset(reset),
         .instr(instr),
         .pcUpdate(pcUpdate),
+        .adrSrc(adrSrc),
         .memWrite(memWrite),
         .IRWrite(IRWrite),
         .regWrite(regWrite),

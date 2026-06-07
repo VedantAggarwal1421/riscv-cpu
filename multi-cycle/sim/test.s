@@ -2,14 +2,17 @@
 .global _start
 
 _start:
-    addi x1, x0, 10      # x1 = 10
-    addi x2, x0, -3      # x2 = -3 (tests sign extension)
-    addi x3, x1, 5       # x3 = 15
-    slti x4, x1, 20      # x4 = 1  (10 < 20)
-    slti x5, x1, 5       # x5 = 0  (10 < 5 is false)
-    xori x6, x1, 15      # x6 = 5  (1010 ^ 1111 = 0101)
-    ori  x7, x1, 5       # x7 = 15 (1010 | 0101 = 1111)
-    andi x8, x1, 7       # x8 = 2  (1010 & 0111 = 0010)
-    slli x9, x1, 2       # x9 = 40 (10 << 2)
-    srli x10, x9, 1      # x10 = 20
-    srai x11, x2, 1      # x11 = -2 (arithmetic right shift, sign preserved)
+    addi x1, x0, 0x100     # base address 1
+    addi x2, x0, 0x200     # base address 2
+    addi x3, x0, 4         # offset increment
+
+    lw   x10, 0(x1)        # x10 = mem[0x100] = 0xDEADBEEF
+    lw   x11, 4(x1)        # x11 = mem[0x104] = 0xCAFEBABE
+    lw   x12, 8(x1)        # x12 = mem[0x108] = 0x12345678
+    lw   x13, -4(x1)       # x13 = mem[0x0FC] = 0xAABBCCDD
+    lw   x14, 0(x2)        # x14 = mem[0x200] = 0x11223344
+    lw   x15, 4(x2)        # x15 = mem[0x204] = 0x55667788
+    add  x6, x1, x3        # x6  = 0x104
+    lw   x16, 0(x6)        # x16 = mem[0x104] = 0xCAFEBABE (same as x11, different base)
+    addi x7, x2, 8
+    lw   x17, 0(x7)        # x17 = mem[0x208] = 0x99AABBCC

@@ -1,4 +1,4 @@
-`timescale 1ns/1ns
+`timescale 1ns/1ps
 
 module cpu_tb();
     reg clk;
@@ -11,7 +11,9 @@ module cpu_tb();
 
     CPU DUT(.clk(clk), .reset(reset));
     initial begin
-        reset = 1; #15
+        $dumpfile("wave.vcd");
+        $dumpvars(0, cpu_tb);
+        reset = 1; #20
         reset = 0; #1000
         $finish;
     end
