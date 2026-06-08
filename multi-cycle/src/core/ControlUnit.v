@@ -2,6 +2,10 @@ module controlUnit(
     input clk,
     input reset,
     input [31:0] instr,
+    input zero,
+    input overflow,
+    input negative,
+    input borrow,
     output logic pcUpdate,
     output logic adrSrc,
     output logic memWrite,
@@ -9,7 +13,7 @@ module controlUnit(
     output logic IRWrite,
     output logic regWrite,
     output logic [2:0] immSrc,
-    output logic ALUSrcA,
+    output logic [1:0] ALUSrcA,
     output logic [1:0] ALUSrcB,
     output logic invertOp,
     output logic [2:0] ALUCtrl,
@@ -37,6 +41,7 @@ module controlUnit(
     localparam writeBack_mem = 4'd7;
     localparam memStore = 4'd8;
     localparam pcSet = 4'd9;
+    localparam branch = 4'd10;
 
     logic [3:0] currentState, nextState;
 
@@ -53,12 +58,14 @@ module controlUnit(
                     7'b0010011: nextState = execute_I;
                     7'b0000011: nextState = memRead;
                     7'b0100011: nextState = memStore;
+                    7'b1100011: nextState = branch;
                 endcase
             end
             execute_R: nextState = writeBack_ALU;
             execute_I: nextState = writeBack_ALU;
             memRead: nextState = writeBack_mem;
             memStore: nextState = pcSet;
+            branch: nextState = pcSet;
             pcSet: nextState = memFetch;
             writeBack_mem: nextState = memFetch;
             writeBack_ALU: nextState = memFetch;
@@ -82,7 +89,7 @@ module controlUnit(
         IRWrite = 0;
         regWrite = 0;
         immSrc = 3'd0;
-        ALUSrcA = 0;
+        ALUSrcA = 2'd0;
         ALUSrcB = 2'd0;
         invertOp = 0;
         resSrc = 2'd0;
@@ -90,7 +97,7 @@ module controlUnit(
             memFetch: begin
                 adrSrc = 0;
                 pcUpdate = 1;
-                ALUSrcA = 0;        //Setting ALU to calculate PC+4 here to support correct PC update after reset
+                ALUSrcA = 2'd0;        //Setting ALU to calculate PC+4 here to support correct PC update after reset
                 ALUSrcB = 2'd1;
                 resSrc = 2'd0;
                 IRWrite = 1;
@@ -99,14 +106,19 @@ module controlUnit(
                 //IRWrite = 1;
             end
             decode: begin
-                ALUSrcA = 1;
+                if(opcode != 7'b1100011)
+                    ALUSrcA = 2'd1;
+                else
+                    ALUSrcA = 2'd2;
                 ALUSrcB = 2'd2;
                 resSrc = 2'd1;
                 adrSrc = 1;
-                if(opcode == 7'b0000011)
-                    immSrc = 3'b000;
-                else
-                    immSrc = 3'b001;
+                case(opcode)
+                    7'b0010011: immSrc = 3'b000;
+                    7'b0000011: immSrc = 3'b000;
+                    7'b0100011: immSrc = 3'b001;
+                    7'b1100011: immSrc = 3'b010;
+                endcase
             end
             memRead: begin
                 resSrc = 2'd0;
@@ -119,24 +131,37 @@ module controlUnit(
                 memWrite = 1;
                 formatCtrl = funct3;
             end
+            branch: begin
+                ALUSrcA = 2'd1;
+                ALUSrcB = 2'd0;
+                invertOp = 1;
+                case(funct3)
+                    3'b000: pcUpdate = zero; //BEQ
+                    3'b001: pcUpdate = !zero;//BNE
+                    3'b100: pcUpdate = (negative^overflow);//BLT
+                    3'b101: pcUpdate = !(negative^overflow);//BGE
+                    3'b110: pcUpdate = borrow;//BLTU
+                    3'b111: pcUpdate = !borrow;//BGEU
+                endcase
+            end
             pcSet: begin
-                ALUSrcA = 0;
+                ALUSrcA = 2'd0;
                 ALUSrcB = 2'd1;
             end
             writeBack_mem: begin
                 resSrc = 2'd2;
                 regWrite = 1;
-                ALUSrcA = 0;
+                ALUSrcA = 2'd0;
                 ALUSrcB = 2'd1;
                 formatCtrl = funct3;
             end
             execute_R: begin
-                ALUSrcA = 1;
+                ALUSrcA = 2'd1;
                 ALUSrcB = 2'd0;
                 invertOp = invertOp_t;
             end
             execute_I: begin
-                ALUSrcA = 1;
+                ALUSrcA = 2'd1;
                 ALUSrcB = 2'd2;
                 immSrc = 3'd0;
                 if(funct3 == 3'b101)
@@ -145,7 +170,7 @@ module controlUnit(
             writeBack_ALU: begin
                 resSrc = 2'd0;
                 regWrite = 1;
-                ALUSrcA = 0;
+                ALUSrcA = 2'd0;
                 ALUSrcB = 2'd1;
             end
         endcase
@@ -158,6 +183,7 @@ module controlUnit(
             memFetch: ALUCtrl = 3'b000;
             decode: ALUCtrl = 3'b000;
             memStore: ALUCtrl = 3'b000;
+            branch: ALUCtrl = 3'b000;
             pcSet: ALUCtrl = 3'b000;
             execute_R: ALUCtrl = funct3;
             execute_I: ALUCtrl = funct3;

@@ -5,14 +5,20 @@ module ALU(
     input [2:0] ALUCtrl,
     output reg [31:0] ALURes,
     output zero,
-    output overflow
+    output overflow,
+    output negative,
+    output borrow
 );
     wire [31:0] BEff;
     wire [31:0] resSub;
     assign BEff = (invertOp)? (~B + 1) : B;
+    
     assign resSub = A-B;
     assign overflow = (A[31] != B[31]) && (resSub[31] != A[31]);
     assign zero = (resSub == 0);
+    assign negative = resSub[31];
+    assign borrow = A < B;
+
     always @(*) begin
       case(ALUCtrl)
         3'b000: ALURes = A+BEff; //ADD/Sub
@@ -30,5 +36,6 @@ module ALU(
         3'b111: ALURes = A & B;
       endcase
     end
+
 
 endmodule

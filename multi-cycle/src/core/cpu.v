@@ -10,12 +10,13 @@ module CPU(
     wire IRWrite;
     wire regWrite;
     wire [2:0] immSrc;
-    wire ALUSrcA;
+    wire [1:0] ALUSrcA;
     wire [1:0] ALUSrcB;
     wire invertOp;
     wire [2:0] ALUCtrl;
     wire [1:0] resSrc;
     wire [31:0] instr;
+    wire zero, overflow, negative, borrow;
 
     dataPath DP(
         .clk(clk),
@@ -32,13 +33,21 @@ module CPU(
         .invertOp(invertOp),
         .ALUCtrl(ALUCtrl),
         .resSrc(resSrc),
-        .instOut(instr)
+        .instOut(instr),
+        .zero(zero),
+        .overflow(overflow),
+        .negative(negative),
+        .borrow(borrow)
     );
 
     controlUnit CP(
         .clk(clk),
         .reset(reset),
         .instr(instr),
+        .zero(zero),
+        .overflow(overflow),
+        .negative(negative),
+        .borrow(borrow),
         .pcUpdate(pcUpdate),
         .adrSrc(adrSrc),
         .memWrite(memWrite),
