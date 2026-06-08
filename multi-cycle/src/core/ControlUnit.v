@@ -27,16 +27,18 @@ module controlUnit(
     assign invertOp_t = funct7[5];
 
     
-    localparam memFetch = 3'd0;
-    localparam fetch = 3'd1;
-    localparam decode = 3'd2;
-    localparam execute_R = 3'd3;
-    localparam writeBack_ALU = 3'd4;
-    localparam execute_I = 3'd5;
-    localparam memRead = 3'd6;
-    localparam writeBack_mem = 3'd7;
+    localparam memFetch = 4'd0;
+    localparam fetch = 4'd1;
+    localparam decode = 4'd2;
+    localparam execute_R = 4'd3;
+    localparam writeBack_ALU = 4'd4;
+    localparam execute_I = 4'd5;
+    localparam memRead = 4'd6;
+    localparam writeBack_mem = 4'd7;
+    localparam memStore = 4'd8;
+    localparam pcSet = 4'd9;
 
-    logic [2:0] currentState, nextState;
+    logic [3:0] currentState, nextState;
 
     //MAIN FSM
     //NEXT STATE LOGIC
@@ -50,11 +52,14 @@ module controlUnit(
                     7'b0110011: nextState = execute_R;
                     7'b0010011: nextState = execute_I;
                     7'b0000011: nextState = memRead;
+                    7'b0100011: nextState = memStore;
                 endcase
             end
             execute_R: nextState = writeBack_ALU;
             execute_I: nextState = writeBack_ALU;
             memRead: nextState = writeBack_mem;
+            memStore: nextState = pcSet;
+            pcSet: nextState = memFetch;
             writeBack_mem: nextState = memFetch;
             writeBack_ALU: nextState = memFetch;
         endcase
@@ -83,6 +88,7 @@ module controlUnit(
         resSrc = 2'd0;
         case(currentState)
             memFetch: begin
+                adrSrc = 0;
                 pcUpdate = 1;
                 ALUSrcA = 0;        //Setting ALU to calculate PC+4 here to support correct PC update after reset
                 ALUSrcB = 2'd1;
@@ -95,14 +101,27 @@ module controlUnit(
             decode: begin
                 ALUSrcA = 1;
                 ALUSrcB = 2'd2;
-                immSrc = 3'd0;
                 resSrc = 2'd1;
                 adrSrc = 1;
+                if(opcode == 7'b0000011)
+                    immSrc = 3'b000;
+                else
+                    immSrc = 3'b001;
             end
             memRead: begin
                 resSrc = 2'd0;
                 adrSrc = 1;
                 formatCtrl = funct3;
+            end
+            memStore: begin
+                resSrc = 2'd0;
+                adrSrc = 1;
+                memWrite = 1;
+                formatCtrl = funct3;
+            end
+            pcSet: begin
+                ALUSrcA = 0;
+                ALUSrcB = 2'd1;
             end
             writeBack_mem: begin
                 resSrc = 2'd2;
@@ -138,6 +157,8 @@ module controlUnit(
         case(currentState)
             memFetch: ALUCtrl = 3'b000;
             decode: ALUCtrl = 3'b000;
+            memStore: ALUCtrl = 3'b000;
+            pcSet: ALUCtrl = 3'b000;
             execute_R: ALUCtrl = funct3;
             execute_I: ALUCtrl = funct3;
             writeBack_mem: ALUCtrl = 3'b000;

@@ -2,29 +2,36 @@
 .global _start
 
 _start:
-    addi x1, x0, 0x100      # base = 0x100, mem[0x100] = 0xDEADBEEF
+    addi x1, x0, 0x300
+    addi x2, x0, 0x42
+    addi x3, x0, 0x7FF      # max positive 12 bit immediate = 0x000007FF
+    addi x8, x0, 0x304      # separate base for SH tests
 
-    # LW
-    lw   x10, 0(x1)         # x10 = 0xDEADBEEF
+    # SB tests
+    sw   x0, 0(x1)          # mem[0x300] = 0x00000000
+    sb   x2, 0(x1)          # mem[0x300] = 0x00000042
+    lbu  x10, 0(x1)         # x10 = 0x42
+    sb   x2, 1(x1)          # mem[0x300] = 0x00004242
+    lbu  x11, 1(x1)         # x11 = 0x42
+    sb   x2, 2(x1)          # mem[0x300] = 0x00424242
+    lbu  x12, 2(x1)         # x12 = 0x42
+    sb   x2, 3(x1)          # mem[0x300] = 0x42424242
+    lbu  x13, 3(x1)         # x13 = 0x42
+    lw   x14, 0(x1)         # x14 = 0x42424242
 
-    # LB — signed, sign extends
-    lb   x11, 0(x1)         # x11 = 0xFFFFFFEF (0xEF sign extended, MSB is 1)
-    lb   x12, 1(x1)         # x12 = 0xFFFFFFBE (0xBE sign extended)
-    lb   x13, 2(x1)         # x13 = 0xFFFFFFAD (0xAD sign extended)
-    lb   x14, 3(x1)         # x14 = 0xFFFFFFDE (0xDE sign extended)
+    # SH tests
+    sw   x0, 0(x8)          # mem[0x304] = 0x00000000
+    sh   x3, 0(x8)          # mem[0x304] = 0x000007FF
+    lhu  x15, 0(x8)         # x15 = 0x07FF
+    sh   x3, 2(x8)          # mem[0x304] = 0x07FF07FF
+    lhu  x16, 2(x8)         # x16 = 0x07FF
+    lw   x17, 0(x8)         # x17 = 0x07FF07FF
 
-    # LBU — unsigned, zero extends
-    lbu  x15, 0(x1)         # x15 = 0x000000EF
-    lbu  x16, 1(x1)         # x16 = 0x000000BE
-    lbu  x17, 2(x1)         # x17 = 0x000000AD
-    lbu  x18, 3(x1)         # x18 = 0x000000DE
-
-    addi x2, x0, 0x104      # base2 = 0x104, mem[0x104] = 0xCAFEBABE
-
-    # LH — signed, sign extends halfword
-    lh   x19, 0(x2)         # x19 = 0xFFFFBABE (0xBABE sign extended, MSB is 1)
-    lh   x20, 2(x2)         # x20 = 0xFFFFCAFE (0xCAFE sign extended)
-
-    # LHU — unsigned, zero extends halfword
-    lhu  x21, 0(x2)         # x21 = 0x0000BABE
-    lhu  x22, 2(x2)         # x22 = 0x0000CAFE
+    # Partial write corruption check
+    sw   x0, 4(x8)          # mem[0x308] = 0x00000000
+    addi x4, x0, 0x7F
+    sb   x4, 5(x8)          # mem[0x308] = 0x00007F00
+    sb   x4, 1(x8)          # mem[0x304] = 0x07FF7FFF
+    lw   x18, 4(x8)         # x18 = 0x00007F00
+    lb   x19, 1(x8)         # x19 = 0x0000007F
+    lw   x20, 0(x8)         # x20 = 0x07FF7FFF

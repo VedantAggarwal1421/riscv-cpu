@@ -33,7 +33,7 @@ module dataPath(
     //Architectural State Elements
     programCounter PC(.clk(clk), .reset(reset), .pcUpdate(pcUpdate), .nextPC(result), .currPC(currPC));
     registerFile regFile(.clk(clk), .reset(reset), .regWrite(regWrite), .A1(instr[19:15]), .A2(instr[24:20]), .A3(instr[11:7]), .WD(result), .R1(reg1), .R2(reg2));
-    memory mem(.clk(clk), .memWrite(memWrite), .formatCtrl(formatCtrl), .A1(memIn), .WD(), .RD(memRead));
+    memory mem(.clk(clk), .memWrite(memWrite), .formatCtrl(formatCtrl), .A1(memIn), .WD(ALUSrcBMuxIn[0]), .RD(memRead));
     
     //Non Architectural State Elements
     enReg32 IRReg(.clk(clk), .reset(reset), .enable(IRWrite), .in(memRead), .out(instr));
