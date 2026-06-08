@@ -5,6 +5,7 @@ module controlUnit(
     output logic pcUpdate,
     output logic adrSrc,
     output logic memWrite,
+    output logic [2:0] formatCtrl,
     output logic IRWrite,
     output logic regWrite,
     output logic [2:0] immSrc,
@@ -72,6 +73,7 @@ module controlUnit(
         pcUpdate = 0;
         adrSrc = 0;
         memWrite = 0;
+        formatCtrl = 3'b010;
         IRWrite = 0;
         regWrite = 0;
         immSrc = 3'd0;
@@ -100,12 +102,14 @@ module controlUnit(
             memRead: begin
                 resSrc = 2'd0;
                 adrSrc = 1;
+                formatCtrl = funct3;
             end
             writeBack_mem: begin
                 resSrc = 2'd2;
                 regWrite = 1;
                 ALUSrcA = 0;
                 ALUSrcB = 2'd1;
+                formatCtrl = funct3;
             end
             execute_R: begin
                 ALUSrcA = 1;

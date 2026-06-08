@@ -6,6 +6,7 @@ module CPU(
     wire pcUpdate;
     wire adrSrc;
     wire memWrite;
+    wire [2:0] formatCtrl;
     wire IRWrite;
     wire regWrite;
     wire [2:0] immSrc;
@@ -22,6 +23,7 @@ module CPU(
         .pcUpdate(pcUpdate),
         .adrSrc(adrSrc),
         .memWrite(memWrite),
+        .formatCtrl(formatCtrl),
         .IRWrite(IRWrite),
         .regWrite(regWrite),
         .immSrc(immSrc),
@@ -40,6 +42,7 @@ module CPU(
         .pcUpdate(pcUpdate),
         .adrSrc(adrSrc),
         .memWrite(memWrite),
+        .formatCtrl(formatCtrl),
         .IRWrite(IRWrite),
         .regWrite(regWrite),
         .immSrc(immSrc),
