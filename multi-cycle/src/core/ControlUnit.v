@@ -54,19 +54,21 @@ module controlUnit(
         case(currentState)
             memFetch: nextState = fetch;
             fetch: begin
-                nextState = decode;
-            end
-            decode: begin
                 case(opcode)
                     7'b0110011: nextState = execute_R;
                     7'b0010011: nextState = execute_I;
+                    7'b0110111: nextState = execute_U;
+                    7'b0010111: nextState = execute_U;
+                    default: nextState = decode;
+                endcase
+            end
+            decode: begin
+                case(opcode)
                     7'b0000011: nextState = memRead;
                     7'b0100011: nextState = memStore;
                     7'b1100011: nextState = branch;
                     7'b1101111: nextState = jal_r;
                     7'b1100111: nextState = jal_r;
-                    7'b0110111: nextState = execute_U;
-                    7'b0010111: nextState = execute_U;
                 endcase
             end
             jal_r: nextState = writeBack_ALU;
@@ -124,7 +126,6 @@ module controlUnit(
                 resSrc = 2'd1;
                 adrSrc = 1;
                 case(opcode)
-                    7'b0010011: immSrc = 3'b000;
                     7'b0000011: immSrc = 3'b000;
                     7'b0100011: immSrc = 3'b001;
                     7'b1100011: immSrc = 3'b010;
