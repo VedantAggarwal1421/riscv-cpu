@@ -10,7 +10,7 @@ module immediateGenerator(input [31:7] instr, input [2:0] immSrc, output reg [31
             3'b100: extendedImm = {{11{instr[31]}}, instr[31], instr[20], instr[19:12], instr[30:21], 1'b0}; //J Type
             default: extendedImm = 32'b0;
         endcase
-        //$display("%0d", extendedImm);
+        //$display("%0b", extendedImm);
     end
 
 endmodule

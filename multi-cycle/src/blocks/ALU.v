@@ -12,12 +12,6 @@ module ALU(
     wire [31:0] BEff;
     wire [31:0] resSub;
     assign BEff = (invertOp)? (~B + 1) : B;
-    
-    assign resSub = A-B;
-    assign overflow = (A[31] != B[31]) && (resSub[31] != A[31]);
-    assign zero = (resSub == 0);
-    assign negative = resSub[31];
-    assign borrow = A < B;
 
     always @(*) begin
       case(ALUCtrl)
@@ -37,5 +31,9 @@ module ALU(
       endcase
     end
 
+    assign overflow = (A[31] != B[31]) && (ALURes[31] != A[31]);
+    assign zero = (ALURes == 0);
+    assign negative = ALURes[31];
+    assign borrow = (ALUCtrl == 3'b000 && invertOp)? A < B : 0; //Borrow only calculated conditionally because for whatever reason lui fails if borrow is calculated
 
 endmodule

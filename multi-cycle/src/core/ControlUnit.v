@@ -42,6 +42,8 @@ module controlUnit(
     localparam memStore = 4'd8;
     localparam pcSet = 4'd9;
     localparam branch = 4'd10;
+    localparam jal_r = 4'd11;
+    localparam execute_U = 4'd12;
 
     logic [3:0] currentState, nextState;
 
@@ -51,7 +53,9 @@ module controlUnit(
         nextState = currentState; //Default Case
         case(currentState)
             memFetch: nextState = fetch;
-            fetch: nextState = decode;
+            fetch: begin
+                nextState = decode;
+            end
             decode: begin
                 case(opcode)
                     7'b0110011: nextState = execute_R;
@@ -59,10 +63,16 @@ module controlUnit(
                     7'b0000011: nextState = memRead;
                     7'b0100011: nextState = memStore;
                     7'b1100011: nextState = branch;
+                    7'b1101111: nextState = jal_r;
+                    7'b1100111: nextState = jal_r;
+                    7'b0110111: nextState = execute_U;
+                    7'b0010111: nextState = execute_U;
                 endcase
             end
+            jal_r: nextState = writeBack_ALU;
             execute_R: nextState = writeBack_ALU;
             execute_I: nextState = writeBack_ALU;
+            execute_U: nextState = writeBack_ALU;
             memRead: nextState = writeBack_mem;
             memStore: nextState = pcSet;
             branch: nextState = pcSet;
@@ -106,10 +116,10 @@ module controlUnit(
                 //IRWrite = 1;
             end
             decode: begin
-                if(opcode != 7'b1100011)
-                    ALUSrcA = 2'd1;
-                else
+                if(opcode == 7'b1100011 || opcode == 7'b1101111)
                     ALUSrcA = 2'd2;
+                else
+                    ALUSrcA = 2'd1;
                 ALUSrcB = 2'd2;
                 resSrc = 2'd1;
                 adrSrc = 1;
@@ -118,6 +128,8 @@ module controlUnit(
                     7'b0000011: immSrc = 3'b000;
                     7'b0100011: immSrc = 3'b001;
                     7'b1100011: immSrc = 3'b010;
+                    7'b1101111: immSrc = 3'b000;
+                    7'b1100111: immSrc = 3'b000;
                 endcase
             end
             memRead: begin
@@ -148,6 +160,11 @@ module controlUnit(
                 ALUSrcA = 2'd0;
                 ALUSrcB = 2'd1;
             end
+            jal_r: begin
+                ALUSrcA = 2'd2;
+                ALUSrcB = 2'd1;
+                pcUpdate = 1;
+            end
             writeBack_mem: begin
                 resSrc = 2'd2;
                 regWrite = 1;
@@ -167,6 +184,14 @@ module controlUnit(
                 if(funct3 == 3'b101)
                     invertOp = invertOp_t;
             end
+            execute_U: begin
+                immSrc = 3'b011;
+                if(opcode == 7'b0110111)
+                    ALUSrcA = 2'd3;
+                else
+                    ALUSrcA = 2'd2;
+                ALUSrcB = 2'd2;
+            end
             writeBack_ALU: begin
                 resSrc = 2'd0;
                 regWrite = 1;
@@ -185,8 +210,10 @@ module controlUnit(
             memStore: ALUCtrl = 3'b000;
             branch: ALUCtrl = 3'b000;
             pcSet: ALUCtrl = 3'b000;
+            jal_r: ALUCtrl = 3'b000;
             execute_R: ALUCtrl = funct3;
             execute_I: ALUCtrl = funct3;
+            execute_U: ALUCtrl = 3'b000;
             writeBack_mem: ALUCtrl = 3'b000;
             writeBack_ALU: ALUCtrl = 3'b000;
         endcase
